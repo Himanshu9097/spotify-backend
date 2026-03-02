@@ -305,3 +305,200 @@ a:hover {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ════════════════════════════════════════════════════════════
+   Music Player Bar
+═══════════════════════════════════════════════════════════════ */
+.music-player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  background: rgba(18, 18, 18, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  gap: 2rem;
+  z-index: 1000;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+}
+
+/* give pages space so content isn't hidden behind the player */
+.content-wrapper {
+  padding-bottom: 110px;
+}
+
+/* ── left: track info ─────────────────────────────────────── */
+.player-track-info {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 200px;
+  flex: 1;
+}
+
+.player-track-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--primary-color);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: pulse-icon 2s ease-in-out infinite;
+}
+
+@keyframes pulse-icon {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(29,185,84,0.45); }
+  50%       { box-shadow: 0 0 0 8px rgba(29,185,84,0); }
+}
+
+.player-track-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-track-artist {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── centre: buttons + progress ──────────────────────────── */
+.player-centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 2;
+}
+
+.player-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.player-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: var(--transition);
+}
+
+.player-icon-btn:hover {
+  color: #fff;
+  transform: scale(1.15);
+}
+
+.player-play-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  color: #000;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.player-play-btn:hover {
+  background: var(--primary-color);
+  transform: scale(1.08);
+}
+
+.player-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 500px;
+}
+
+.player-time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  width: 34px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ── right: volume ───────────────────────────────────────── */
+.player-volume {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+/* ── shared slider ───────────────────────────────────────── */
+.player-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  flex: 1;
+  background: rgba(255,255,255,0.18);
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+  transition: height 0.15s ease;
+}
+
+.player-slider:hover {
+  height: 6px;
+}
+
+.player-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+
+.player-slider:hover::-webkit-slider-thumb {
+  background: var(--primary-color);
+}
+
+/* active track highlight */
+.track-row-active {
+  background: rgba(29, 185, 84, 0.08) !important;
+  border-left: 3px solid var(--primary-color);
+}
+
+/* hover play overlay on music track cards */
+.track-card-play-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: inherit;
+}
+
+.album-card:hover .track-card-play-overlay {
+  opacity: 1;
+}
+
