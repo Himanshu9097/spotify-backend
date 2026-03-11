@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import { PlayerContext } from '../context/PlayerContext';
 import {
-    Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music
+    Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Music, AlertCircle
 } from 'lucide-react';
 
 function fmt(secs) {
@@ -13,26 +13,32 @@ function fmt(secs) {
 
 function MusicPlayer() {
     const {
-        currentTrack, isPlaying, progress, duration, volume,
+        currentTrack, isPlaying, progress, duration, volume, error,
         togglePlay, seek, skipNext, skipPrev, setVolume,
     } = useContext(PlayerContext);
 
     if (!currentTrack) return null;
 
-    const elapsed = (progress / 100) * duration;
+    const elapsed = (progress / 100) * (duration || 0);
 
     return (
         <div className="music-player">
             {/* ── Track info ──────────────────────────────────────── */}
             <div className="player-track-info">
-                <div className="player-track-icon">
-                    <Music size={18} color="#000" />
+                <div className="player-track-icon" style={{ background: error ? '#e91429' : undefined }}>
+                    {error
+                        ? <AlertCircle size={18} color="#fff" />
+                        : <Music size={18} color="#000" />
+                    }
                 </div>
-                <div className="player-track-text">
+                <div className="player-track-text" style={{ overflow: 'hidden' }}>
                     <div className="player-track-title">{currentTrack.title}</div>
-                    <div className="player-track-artist">
-                        {currentTrack.artist?.username || currentTrack.artist || ''}
-                    </div>
+                    {error
+                        ? <div style={{ fontSize: '0.72rem', color: '#e91429', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{error}</div>
+                        : <div className="player-track-artist">
+                            {currentTrack.artist?.username || currentTrack.artist || ''}
+                        </div>
+                    }
                 </div>
             </div>
 

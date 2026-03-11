@@ -3,7 +3,10 @@ import { useContext } from 'react';
 import { AuthContext } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import MusicPlayer from './components/MusicPlayer';
+import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
+import Search from './pages/Search';
+import Library from './pages/Library';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import CreateAlbum from './pages/CreateAlbum';
@@ -22,7 +25,8 @@ function App() {
   const { user } = useContext(AuthContext);
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${user ? 'logged-in' : ''}`}>
+      {user && <Sidebar />}
       <div className="main-content">
         {user && <Navbar />}
         <Routes>
@@ -33,6 +37,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute>
+                <Search />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/library"
+            element={
+              <ProtectedRoute>
+                <Library />
               </ProtectedRoute>
             }
           />

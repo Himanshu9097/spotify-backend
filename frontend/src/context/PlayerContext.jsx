@@ -1,95 +1,166 @@
-import { createContext, useState, useRef, useEffect } from 'react';
+import { createContext, useState, useRef, useEffect, useCallback } from 'react';
 
 export const PlayerContext = createContext();
 
 export const PlayerProvider = ({ children }) => {
-    const [currentTrack, setCurrentTrack] = useState(null); // { _id, title, artist, uri }
+    const [currentTrack, setCurrentTrack] = useState(null);
     const [queue, setQueue] = useState([]);
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(0);   // 0-100
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(0.8);
-    const audioRef = useRef(new Audio());
+    const [error, setError] = useState('');
+    const audioRef = useRef(null);
 
-    // ── sync volume immediately ──────────────────────────────────────────────
+    // Create Audio element once
+    if (!audioRef.current) {
+        audioRef.current = new Audio();
+        audioRef.current.crossOrigin = 'anonymous';
+        audioRef.current.preload = 'auto';
+    }
+
+    // ── Sync volume ────────────────────────────────────────────────
     useEffect(() => {
         audioRef.current.volume = volume;
     }, [volume]);
 
-    // ── when track changes, load + autoplay ─────────────────────────────────
+    // ── Load & play when track changes ─────────────────────────────
     useEffect(() => {
         const audio = audioRef.current;
-        if (!currentTrack?.uri) return;
+        if (!currentTrack) return;
 
-        audio.src = currentTrack.uri;
-        audio.load();
-        audio.play().then(() => setIsPlaying(true)).catch(console.error);
+        if (!currentTrack.uri) {
+            setError('This track has no playable URL.');
+            return;
+        }
 
-        const onTimeUpdate = () =>
-            setProgress((audio.currentTime / audio.duration) * 100 || 0);
-        const onDurationChange = () => setDuration(audio.duration || 0);
-        const onEnded = () => {
-            setIsPlaying(false);
-            setProgress(0);
-            // Auto-advance queue
-            setQueue(prev => {
-                if (prev.length === 0) return prev;
-                const [next, ...rest] = prev;
-                setCurrentTrack(next);
-                return rest;
-            });
-        };
+        setError('');
+        setProgress(0);
+        setDuration(0);
 
-        audio.addEventListener('timeupdate', onTimeUpdate);
-        audio.addEventListener('durationchange', onDurationChange);
-        audio.addEventListener('ended', onEnded);
+        // Stop any currently playing audio first
+        audio.pause();
+        audio.src = '';
 
-        return () => {
-            audio.removeEventListener('timeupdate', onTimeUpdate);
-            audio.removeEventListener('durationchange', onDurationChange);
-            audio.removeEventListener('ended', onEnded);
-        };
+        // Small timeout to let browser release previous src
+        const loadTimeout = setTimeout(() => {
+            audio.src = currentTrack.uri;
+
+            const onCanPlay = () => {
+                audio.play()
+                    .then(() => setIsPlaying(true))
+                    .catch(err => {
+                        console.error('Playback error:', err);
+                        setError('Could not play this track. Check the audio URL.');
+                        setIsPlaying(false);
+                    });
+            };
+
+            const onTimeUpdate = () => {
+                if (audio.duration && !isNaN(audio.duration)) {
+                    setProgress((audio.currentTime / audio.duration) * 100);
+                }
+            };
+
+            const onDurationChange = () => {
+                if (!isNaN(audio.duration)) setDuration(audio.duration);
+            };
+
+            const onEnded = () => {
+                setIsPlaying(false);
+                setProgress(0);
+                // Auto-advance queue
+                setQueue(prev => {
+                    if (prev.length === 0) return prev;
+                    const [next, ...rest] = prev;
+                    setCurrentTrack(next);
+                    return rest;
+                });
+            };
+
+            const onError = (e) => {
+                console.error('Audio error:', audio.error);
+                const msg = audio.error
+                    ? `Audio error (code ${audio.error.code}): ${audio.error.message}`
+                    : 'Unknown audio error';
+                setError(msg);
+                setIsPlaying(false);
+            };
+
+            audio.addEventListener('canplay', onCanPlay, { once: true });
+            audio.addEventListener('timeupdate', onTimeUpdate);
+            audio.addEventListener('durationchange', onDurationChange);
+            audio.addEventListener('ended', onEnded);
+            audio.addEventListener('error', onError);
+
+            audio.load();
+
+            return () => {
+                audio.removeEventListener('canplay', onCanPlay);
+                audio.removeEventListener('timeupdate', onTimeUpdate);
+                audio.removeEventListener('durationchange', onDurationChange);
+                audio.removeEventListener('ended', onEnded);
+                audio.removeEventListener('error', onError);
+            };
+        }, 50);
+
+        return () => clearTimeout(loadTimeout);
+
     }, [currentTrack]);
 
-    // ── controls ─────────────────────────────────────────────────────────────
-    const play = (track, trackQueue = []) => {
+    // ── Controls ───────────────────────────────────────────────────
+    const play = useCallback((track, trackQueue = []) => {
+        if (!track) return;
+        setError('');
+
+        // Same track — toggle play/pause
         if (track._id === currentTrack?._id) {
             togglePlay();
             return;
         }
+
         setQueue(trackQueue.filter(t => t._id !== track._id));
         setCurrentTrack(track);
-    };
+    }, [currentTrack]);
 
-    const togglePlay = () => {
+    const togglePlay = useCallback(() => {
         const audio = audioRef.current;
+        if (!audio.src) return;
+
         if (isPlaying) {
             audio.pause();
             setIsPlaying(false);
         } else {
-            audio.play().then(() => setIsPlaying(true)).catch(console.error);
+            audio.play()
+                .then(() => setIsPlaying(true))
+                .catch(err => {
+                    console.error('Resume error:', err);
+                    setIsPlaying(false);
+                });
         }
-    };
+    }, [isPlaying]);
 
-    const seek = (pct) => {
+    const seek = useCallback((pct) => {
         const audio = audioRef.current;
-        if (!audio.duration) return;
+        if (!audio.duration || isNaN(audio.duration)) return;
         audio.currentTime = (pct / 100) * audio.duration;
         setProgress(pct);
-    };
+    }, []);
 
-    const skipNext = () => {
-        if (queue.length === 0) return;
-        const [next, ...rest] = queue;
-        setQueue(rest);
-        setCurrentTrack(next);
-    };
+    const skipNext = useCallback(() => {
+        setQueue(prev => {
+            if (prev.length === 0) return prev;
+            const [next, ...rest] = prev;
+            setCurrentTrack(next);
+            return rest;
+        });
+    }, []);
 
-    const skipPrev = () => {
+    const skipPrev = useCallback(() => {
         const audio = audioRef.current;
         audio.currentTime = 0;
         setProgress(0);
-    };
+    }, []);
 
     return (
         <PlayerContext.Provider
@@ -100,6 +171,7 @@ export const PlayerProvider = ({ children }) => {
                 duration,
                 volume,
                 queue,
+                error,
                 play,
                 togglePlay,
                 seek,
