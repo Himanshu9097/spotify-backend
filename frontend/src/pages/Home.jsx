@@ -139,14 +139,66 @@ function Home() {
     const isTrackPlaying = (track) =>
         currentTrack?._id === track._id && isPlaying;
 
+    // Build Quick Links Array mimicking top Spotify shortcuts
+    const quickLinks = [];
+    if (likedSongs.length > 0) quickLinks.push({ id: 'liked', name: 'Liked Songs', type: 'playlist', image: null, icon: <Heart fill="white" color="white" size={28} /> });
+    
+    pinnedPlaylists.slice(0, 4).forEach(pl => {
+        quickLinks.push({ id: pl._id, name: pl.name, type: 'custom', image: pl.songs?.[0]?.image, icon: <Disc size={28} color="white" />, link: `/playlist/${pl._id}` });
+    });
+    
+    history.slice(0, 8 - quickLinks.length).forEach(h => {
+        quickLinks.push({ id: h._id, name: h.title, type: 'history', image: h.image, icon: <Music size={28} color="white" />, trackInfo: h });
+    });
+
     return (
-        <div className="content-wrapper fade-in">
+        <div className="content-wrapper fade-in" style={{ paddingTop: '1rem' }}>
+            
+            {/* Filter Chips */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                <button style={{ background: '#fff', color: '#000', border: 'none', padding: '0.5rem 1rem', borderRadius: '50px', fontWeight: 600, fontSize: '0.875rem' }}>All</button>
+                <button style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '50px', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'background 0.3s' }} onMouseEnter={e=>e.target.style.background='rgba(255,255,255,0.2)'} onMouseLeave={e=>e.target.style.background='rgba(255,255,255,0.1)'}>Music</button>
+                <button style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '50px', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', transition: 'background 0.3s' }} onMouseEnter={e=>e.target.style.background='rgba(255,255,255,0.2)'} onMouseLeave={e=>e.target.style.background='rgba(255,255,255,0.1)'}>Podcasts</button>
+            </div>
+
+            {/* Quick Links Grid */}
+            {quickLinks.length > 0 && (
+                <div className="quick-links-grid">
+                    {quickLinks.map((link, idx) => {
+                        const active = link.type === 'history' && currentTrack?._id === link.id && isPlaying;
+                        return (
+                            <div 
+                                key={link.id + idx} 
+                                className="quick-link-card"
+                                onClick={() => {
+                                    if (link.link) navigate(link.link);
+                                    else if (link.type === 'history') play(link.trackInfo, history);
+                                    else if (link.type === 'playlist') document.getElementById('liked-songs-section')?.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                            >
+                                {link.image ? (
+                                    <img src={link.image} alt={link.name} />
+                                ) : (
+                                    <div className="icon-placeholder" style={{ background: link.id === 'liked' ? 'linear-gradient(135deg, #450af5, #c4efd9)' : '#333' }}>
+                                        {link.icon}
+                                    </div>
+                                )}
+                                <div className="quick-link-title">{link.name}</div>
+                                <div className="quick-link-play-btn">
+                                    {active ? <Pause size={20} fill="#000" color="#000" /> : <Play size={20} fill="#000" color="#000" style={{marginLeft: '2px'}} />}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* ── Albums ──────────────────────────────────────────── */}
             <section style={{ marginBottom: '3rem' }}>
-                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                    <Disc size={24} color="var(--primary-color)" /> Featured Albums
-                </h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1.5rem' }}>
+                    <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>It's New Music Friday!</h2>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e=>e.currentTarget.style.color='#fff'} onMouseLeave={e=>e.currentTarget.style.color='var(--text-muted)'}>Show all</span>
+                </div>
                 {albums.length === 0 ? (
                     <p style={{ color: 'var(--text-muted)' }}>No albums available.</p>
                 ) : (
@@ -183,17 +235,19 @@ function Home() {
                 </div>
             )}
             
-            {likedSongs.length > 0 && (
-                <PlaylistRow title="Liked Songs" icon={<Heart size={28} fill="var(--primary-color)" color="var(--primary-color)" />} tracks={likedSongs} likedSongs={likedSongs} toggleLike={handleToggleLike} />
-            )}
-            {likedSongs.length === 0 && (
-                <div style={{ marginTop: '3rem' }}>
-                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '1.5rem', opacity: 0.5 }}>
-                        <Heart size={28} color="white" /> Liked Songs
-                    </h2>
-                    <p style={{ color: 'var(--text-muted)' }}>Tap the heart on any song to save it here!</p>
-                </div>
-            )}
+            <div id="liked-songs-section">
+                {likedSongs.length > 0 && (
+                    <PlaylistRow title="Liked Songs" icon={<Heart size={28} fill="var(--primary-color)" color="var(--primary-color)" />} tracks={likedSongs} likedSongs={likedSongs} toggleLike={handleToggleLike} />
+                )}
+                {likedSongs.length === 0 && (
+                    <div style={{ marginTop: '3rem' }}>
+                        <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '1.5rem', opacity: 0.5 }}>
+                            <Heart size={28} color="white" /> Liked Songs
+                        </h2>
+                        <p style={{ color: 'var(--text-muted)' }}>Tap the heart on any song to save it here!</p>
+                    </div>
+                )}
+            </div>
 
             {/* Render any pinned user Custom Playlists */}
             {pinnedPlaylists.map(pl => (

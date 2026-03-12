@@ -1,32 +1,63 @@
 import { useContext } from 'react';
-import { Link } from 'react-router-dom';
-import { Music, UploadCloud, FolderPlus, LogOut } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, Home, Search, Bell, Users, User, LogOut, UploadCloud, FolderPlus } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
 function Navbar() {
     const { user, logout } = useContext(AuthContext);
+    const navigate = useNavigate();
 
     return (
-        <nav className="navbar">
-            <Link to="/" className="nav-brand">
-                <Music size={28} color="#1DB954" />
-                Spotify Backend App
-            </Link>
-            <div className="nav-links">
+        <nav className="navbar" style={{ padding: '0.75rem 1.5rem', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: 'none', height: '64px' }}>
+            {/* Left Nav Controls */}
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button onClick={() => navigate(-1)} style={{ background: '#121212', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }} title="Go back">
+                    <ChevronLeft size={20} />
+                </button>
+                <button onClick={() => navigate(1)} style={{ background: '#121212', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#a7a7a7' }} title="Go forward">
+                    <ChevronRight size={20} />
+                </button>
+            </div>
+
+            {/* Center Search / Home */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, maxWidth: '540px', margin: '0 2rem' }}>
+                <Link to="/" style={{ background: '#1a1a1a', border: 'none', borderRadius: '50%', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', textDecoration: 'none', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                    <Home size={24} />
+                </Link>
+                <div style={{ display: 'flex', alignItems: 'center', background: '#1a1a1a', borderRadius: '50px', padding: '0.75rem 1.25rem', flex: 1, border: '1px solid transparent', transition: 'background-color 0.3s', cursor: 'text' }} onClick={() => navigate('/search')} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'} onMouseLeave={e => e.currentTarget.style.backgroundColor = '#1a1a1a'}>
+                    <Search size={22} color="#a7a7a7" style={{ marginRight: '0.75rem' }} />
+                    <input 
+                        type="text" 
+                        placeholder="What do you want to play?" 
+                        style={{ background: 'transparent', border: 'none', color: '#fff', outline: 'none', width: '100%', fontSize: '1rem', fontWeight: 500, cursor: 'pointer' }}
+                        onClick={(e) => { e.preventDefault(); navigate('/search'); }}
+                        readOnly
+                    />
+                </div>
+            </div>
+
+            {/* Right Icons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {user?.role === 'artist' && (
                     <>
-                        <Link to="/upload-music" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
-                            <UploadCloud size={16} /> Upload Music
+                        <Link to="/upload-music" title="Upload Music" style={{ color: '#a7a7a7', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#a7a7a7'}>
+                            <UploadCloud size={20} />
                         </Link>
-                        <Link to="/create-album" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
-                            <FolderPlus size={16} /> Create Album
+                        <Link to="/create-album" title="Create Album" style={{ color: '#a7a7a7', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#a7a7a7'}>
+                            <FolderPlus size={20} />
                         </Link>
                     </>
                 )}
-                <span style={{ fontWeight: '600', marginRight: '1rem' }}>Welcome, {user?.username}</span>
-                <button className="btn" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={logout}>
-                    <LogOut size={16} /> Logout
+                <button title="Notifications" style={{ background: 'transparent', border: 'none', color: '#a7a7a7', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#a7a7a7'}>
+                    <Bell size={20} />
                 </button>
+                <button title="Friend Activity" style={{ background: 'transparent', border: 'none', color: '#a7a7a7', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#a7a7a7'}>
+                    <Users size={20} />
+                </button>
+                
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: 'pointer', marginLeft: '0.5rem', border: '4px solid #1a1a1a', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'} onClick={logout} title="Logout">
+                    <User size={18} color="#fff" />
+                </div>
             </div>
         </nav>
     );

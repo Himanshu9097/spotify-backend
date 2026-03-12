@@ -160,9 +160,84 @@ a:hover {
 
 .content-wrapper {
   padding: 2rem;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+}
+
+/* Quick Links Top Grid */
+.quick-links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.quick-link-card {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    height: 64px;
+    position: relative;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.quick-link-card:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.quick-link-card img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+}
+
+.quick-link-card .icon-placeholder {
+    width: 64px;
+    height: 64px;
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+}
+
+.quick-link-title {
+    padding: 0 1rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.quick-link-play-btn {
+    position: absolute;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.quick-link-card:hover .quick-link-play-btn {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* Glass panel */
