@@ -16,7 +16,7 @@ function PlaylistRow({ title, icon, tracks }) {
                 {icon} {title}
             </h2>
             <div className="card-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1.5rem' }}>
-                {tracks.map((music) => {
+                {tracks.slice(0, 6).map((music) => {
                     const active = currentTrack?._id === music._id;
                     const playing = active && isPlaying;
                     return (
@@ -71,9 +71,9 @@ function Home() {
                 const [albumRes, musicRes, indianRes, romanticRes, bollywoodRes] = await Promise.all([
                     api.get('/music/albums'),
                     api.get('/music/'),
-                    api.get('/music/external/itunes?q=indian top hits&limit=6'),
-                    api.get('/music/external/itunes?q=romantic hindi song&limit=6'),
-                    api.get('/music/external/itunes?q=latest bollywood 2024&limit=6')
+                    api.get('/music/external/spotify?q=indian top hits&limit=30'),
+                    api.get('/music/external/spotify?q=romantic hindi song&limit=30'),
+                    api.get('/music/external/spotify?q=latest bollywood 2024&limit=30')
                 ]);
                 setAlbums(albumRes.data.albums);
                 setMusics(musicRes.data.musics);

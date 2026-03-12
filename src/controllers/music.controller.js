@@ -116,33 +116,77 @@ async function getAllAlbumById(req, res) {
     }
 }
 
+let spotifyToken = null;
+let spotifyTokenExpiresAt = 0;
+
+async function getSpotifyToken() {
+    if (spotifyToken && Date.now() < spotifyTokenExpiresAt) {
+        return spotifyToken;
+    }
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    
+    if (!clientId || !clientSecret) {
+        throw new Error("Missing Spotify credentials in .env (SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET)");
+    }
+
+    const response = await fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": "Basic " + Buffer.from(clientId + ":" + clientSecret).toString('base64')
+        },
+        body: "grant_type=client_credentials"
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error_description || "Could not get token");
+    
+    spotifyToken = data.access_token;
+    spotifyTokenExpiresAt = Date.now() + ((data.expires_in - 60) * 1000); // 1 min buffer
+    return spotifyToken;
+}
+
 async function searchExternalMusic(req, res) {
     try {
         const query = req.query.q || "top hits";
         const limit = req.query.limit || 20;
+
+        const token = await getSpotifyToken();
         
-        // Fetch from iTunes API (open source, no auth)
-        const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=${limit}`);
+        // Fetch from Spotify API
+        const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
         const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error?.message || "Spotify API error");
+        }
         
-        // Map iTunes data to our standard player format
-        const musics = data.results.map(track => ({
-            _id: track.trackId.toString(),
-            title: track.trackName,
-            artist: { username: track.artistName },
-            uri: track.previewUrl,            // Standard MP4 Audio
-            image: track.artworkUrl100?.replace('100x100bb', '300x300bb'),
-            isExternal: true
-        }));
+        // Map Spotify data to our standard player format
+        // Only return tracks that have a preview_url (some Spotify tracks don't allow 30s previews)
+        const musics = data.tracks.items
+            .filter(track => track.preview_url)
+            .map(track => ({
+                _id: track.id,
+                title: track.name,
+                artist: { username: track.artists.map(a => a.name).join(', ') },
+                uri: track.preview_url,            // 30s MP3 preview
+                image: track.album.images[0]?.url, // Highest resolution image
+                isExternal: true
+            }));
 
         res.status(200).json({
             message: "External musics fetched successfully",
             musics: musics
         });
     } catch(err) {
-        console.log("External search error:", err);
+        console.log("External search error:", err.message || err);
         res.status(500).json({
-            message: "Error fetching external musics"
+            message: "Error fetching external musics: " + (err.message || "Unknown error")
         });
     }
 }
