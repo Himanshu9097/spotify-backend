@@ -15,7 +15,6 @@ export const PlayerProvider = ({ children }) => {
     // Create Audio element once
     if (!audioRef.current) {
         audioRef.current = new Audio();
-        audioRef.current.crossOrigin = 'anonymous';
         audioRef.current.preload = 'auto';
     }
 
