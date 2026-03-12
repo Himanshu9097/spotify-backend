@@ -70,7 +70,7 @@ function Sidebar() {
                 <div style={{ flex: 1, overflowY: 'auto' }}>
                     
                     {/* Liked Songs Static Link */}
-                    <Link to="/" className={`sidebar-link`} style={{ padding: '0.5rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.2rem' }}>
+                    <Link to="/liked-songs" className={`sidebar-link ${isActive('/liked-songs') ? 'active' : ''}`} style={{ padding: '0.5rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.2rem' }}>
                         <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, #450af5, #c4efd9)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <Heart size={20} fill="#fff" color="#fff" />
                         </div>

@@ -35,8 +35,8 @@ async function authUser(req, res, next) {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Allow both user and artist roles
-        if(decoded.role !== "user") {
+        // Allow both user AND artist roles
+        if(decoded.role !== "user" && decoded.role !== "artist") {
             return res.status(403).json({message: "Access denied"});
         }
 

@@ -168,7 +168,7 @@ function Home() {
                                 className="quick-link-card"
                                 onClick={() => {
                                     if (link.link) navigate(link.link);
-                                    else if (link.type === 'liked') document.getElementById('liked-songs-section')?.scrollIntoView({ behavior: 'smooth' });
+                                    else if (link.type === 'liked') navigate('/liked-songs');
                                 }}
                             >
                                 {link.image ? (

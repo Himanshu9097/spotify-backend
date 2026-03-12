@@ -15,6 +15,7 @@ import AlbumDetails from './pages/AlbumDetails';
 import Playlist from './pages/Playlist';
 import History from './pages/History';
 import ProfileSettings from './pages/ProfileSettings';
+import LikedSongs from './pages/LikedSongs';
 
 const ProtectedRoute = ({ children, requireArtist }) => {
   const { user, loading } = useContext(AuthContext);
@@ -72,6 +73,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProfileSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/liked-songs"
+            element={
+              <ProtectedRoute>
+                <LikedSongs />
               </ProtectedRoute>
             }
           />
