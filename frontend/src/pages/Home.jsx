@@ -5,7 +5,7 @@ import { Disc, Music, Play, Pause, TrendingUp, Heart } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 
 // Reusable Playlist Row Component
-function PlaylistRow({ title, icon, tracks }) {
+function PlaylistRow({ title, icon, tracks, likedSongs = [], toggleLike }) {
     const { play, currentTrack, isPlaying } = useContext(PlayerContext);
     
     if (!tracks || tracks.length === 0) return null;
@@ -42,6 +42,20 @@ function PlaylistRow({ title, icon, tracks }) {
                                 }}>
                                     {playing ? <Pause size={24} color="#000" fill="#000" /> : <Play size={24} color="#000" fill="#000" style={{marginLeft: '4px'}} />}
                                 </div>
+                                
+                                {/* Like Icon */}
+                                {toggleLike && (
+                                <div style={{ position:'absolute', top:'8px', right:'8px', zIndex:10, cursor:'pointer' }} onClick={(e) => toggleLike(e, music)}>
+                                    <Heart 
+                                        fill={likedSongs.some(s => s._id === music._id) ? "var(--primary-color)" : "transparent"} 
+                                        color={likedSongs.some(s => s._id === music._id) ? "var(--primary-color)" : "rgba(255,255,255,0.8)"} 
+                                        size={22} 
+                                        style={{ transition: 'transform 0.2s', ...(!likedSongs.some(s => s._id === music._id) && { opacity: 0.7 }) }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.2)'}}
+                                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'}}
+                                    />
+                                </div>
+                                )}
                             </div>
                             <div>
                                 <div className="album-title" style={{ color: active ? 'var(--primary-color)' : 'white' }}>{music.title}</div>
@@ -61,6 +75,7 @@ function Home() {
     const [trendingIndian, setTrendingIndian] = useState([]);
     const [romanticIndian, setRomanticIndian] = useState([]);
     const [latestBollywood, setLatestBollywood] = useState([]);
+    const [likedSongs, setLikedSongs] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const { play, currentTrack, isPlaying } = useContext(PlayerContext);
@@ -68,18 +83,20 @@ function Home() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [albumRes, musicRes, indianRes, romanticRes, bollywoodRes] = await Promise.all([
+                const [albumRes, musicRes, indianRes, romanticRes, bollywoodRes, likedRes] = await Promise.all([
                     api.get('/music/albums'),
                     api.get('/music/'),
                     api.get('/music/external/spotify?q=indian top hits&limit=10'),
                     api.get('/music/external/spotify?q=romantic hindi song&limit=10'),
-                    api.get('/music/external/spotify?q=latest bollywood 2024&limit=10')
+                    api.get('/music/external/spotify?q=latest bollywood 2024&limit=10'),
+                    api.get('/music/liked-songs').catch(() => ({ data: { musics: [] } }))
                 ]);
                 setAlbums(albumRes.data.albums);
                 setMusics(musicRes.data.musics);
                 setTrendingIndian(indianRes.data.musics);
                 setRomanticIndian(romanticRes.data.musics);
                 setLatestBollywood(bollywoodRes.data.musics);
+                setLikedSongs(likedRes.data?.musics || []);
             } catch (err) {
                 console.error('Failed to fetch data', err);
             } finally {
@@ -90,6 +107,28 @@ function Home() {
     }, []);
 
     if (loading) return <div className="loader"></div>;
+
+    const handleToggleLike = async (e, music) => {
+        e.stopPropagation();
+        try {
+            const res = await api.post('/music/liked-songs', {
+                musicId: music._id,
+                title: music.title,
+                artistName: music.artist?.username || music.artist || 'Unknown Artist',
+                uri: music.uri,
+                image: music.image,
+                isExternal: music.isExternal || false
+            });
+            if (res.data.liked) {
+                // Add to liked songs list at position 0
+                setLikedSongs(prev => [{...music}, ...prev]);
+            } else {
+                setLikedSongs(prev => prev.filter(s => s._id !== music._id));
+            }
+        } catch (err) {
+            console.error("Failed to toggle like", err);
+        }
+    };
 
     const isTrackPlaying = (track) =>
         currentTrack?._id === track._id && isPlaying;
@@ -159,6 +198,15 @@ function Home() {
                                         <div className="album-title" style={{ color: active ? 'var(--primary-color)' : 'white' }}>{music.title}</div>
                                         <div className="album-artist">{music.artist?.username || 'Unknown Artist'}</div>
                                     </div>
+                                    
+                                    {/* Like Button */}
+                                    <div style={{ marginRight: '1rem', cursor: 'pointer' }} onClick={(e) => handleToggleLike(e, music)}>
+                                        <Heart 
+                                            fill={likedSongs.some(s => s._id === music._id) ? "var(--primary-color)" : "transparent"} 
+                                            color={likedSongs.some(s => s._id === music._id) ? "var(--primary-color)" : "var(--text-muted)"} 
+                                            size={20} 
+                                        />
+                                    </div>
 
                                     {/* play overlay hint */}
                                     <div style={{ opacity: 0.5 }}>
@@ -171,10 +219,13 @@ function Home() {
                 )}
             </section>
 
-            {/* ── iTunes Playlists ───────────────────────────────────── */}
-            <PlaylistRow title="Trending Indian Hits" icon={<TrendingUp size={28} color="var(--primary-color)" />} tracks={trendingIndian} />
-            <PlaylistRow title="Romantic Hindi Songs" icon={<Heart size={28} color="#e91429" />} tracks={romanticIndian} />
-            <PlaylistRow title="Latest Bollywood" icon={<Play size={28} color="var(--primary-color)" />} tracks={latestBollywood} />
+            {/* ── iTunes / Spotify Playlists ───────────────────────────────────── */}
+            {likedSongs.length > 0 && (
+                <PlaylistRow title="Liked Songs" icon={<Heart size={28} fill="var(--primary-color)" color="var(--primary-color)" />} tracks={likedSongs} likedSongs={likedSongs} toggleLike={handleToggleLike} />
+            )}
+            <PlaylistRow title="Trending Indian Hits" icon={<TrendingUp size={28} color="var(--primary-color)" />} tracks={trendingIndian} likedSongs={likedSongs} toggleLike={handleToggleLike} />
+            <PlaylistRow title="Romantic Hindi Songs" icon={<Heart size={28} color="#e91429" />} tracks={romanticIndian} likedSongs={likedSongs} toggleLike={handleToggleLike} />
+            <PlaylistRow title="Latest Bollywood" icon={<Play size={28} color="var(--primary-color)" />} tracks={latestBollywood} likedSongs={likedSongs} toggleLike={handleToggleLike} />
 
         </div>
     );

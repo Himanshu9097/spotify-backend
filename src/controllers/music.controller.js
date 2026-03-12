@@ -1,5 +1,6 @@
 const musicModel = require("../model/music.model");
 const albumModel = require("../model/album.model");
+const likedSongModel = require("../model/likedSong.model");
 const {uploadFile} = require("../services/storage.service");
 
 async function createMusic(req, res) {
@@ -209,11 +210,68 @@ async function searchExternalMusic(req, res) {
     }
 }
 
+async function toggleLike(req, res) {
+    try {
+        const { musicId, title, artistName, uri, image, isExternal } = req.body;
+        const userId = req.user.id;
+
+        const existingLike = await likedSongModel.findOne({ user: userId, musicId });
+
+        if (existingLike) {
+            // Unlike
+            await likedSongModel.deleteOne({ _id: existingLike._id });
+            return res.status(200).json({ message: "Song unliked", liked: false });
+        } else {
+            // Like
+            await likedSongModel.create({
+                user: userId,
+                musicId,
+                title,
+                artist: { username: artistName },
+                uri,
+                image,
+                isExternal: isExternal || false
+            });
+            return res.status(201).json({ message: "Song liked", liked: true });
+        }
+    } catch (err) {
+        console.error("Error toggling like:", err);
+        res.status(500).json({ message: "Error toggling like" });
+    }
+}
+
+async function getLikedSongs(req, res) {
+    try {
+        const userId = req.user.id;
+        const likedSongs = await likedSongModel.find({ user: userId }).sort({ createdAt: -1 });
+        
+        // Map to standard player format
+        const musics = likedSongs.map(song => ({
+            _id: song.musicId, // important: use the original musicId
+            title: song.title,
+            artist: song.artist,
+            uri: song.uri,
+            image: song.image,
+            isExternal: song.isExternal
+        }));
+
+        res.status(200).json({
+            message: "Liked songs fetched successfully",
+            musics
+        });
+    } catch (err) {
+        console.error("Error fetching liked songs:", err);
+        res.status(500).json({ message: "Error fetching liked songs" });
+    }
+}
+
 module.exports = {
     createMusic, 
     createAlbum, 
     getAllMusic, 
     getAllAlbums, 
     getAllAlbumById,
-    searchExternalMusic
+    searchExternalMusic,
+    toggleLike,
+    getLikedSongs
 };
