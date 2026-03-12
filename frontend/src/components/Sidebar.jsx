@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Search, Library, Music, PlusSquare, Disc, Plus, ListMusic } from 'lucide-react';
+import { Home, Search, Library, Music, PlusSquare, Disc, Plus, ListMusic, Clock } from 'lucide-react';
 import { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api';
@@ -52,6 +52,10 @@ function Sidebar() {
                 <Link to="/library" className={`sidebar-link ${isActive('/library') ? 'active' : ''}`}>
                     <Library size={24} />
                     <span>Your Library</span>
+                </Link>
+                <Link to="/history" className={`sidebar-link ${isActive('/history') ? 'active' : ''}`}>
+                    <Clock size={24} />
+                    <span>History</span>
                 </Link>
             </div>
 

@@ -170,61 +170,6 @@ function Home() {
                 )}
             </section>
 
-            {/* ── Recent Tracks ───────────────────────────────────── */}
-            <section>
-                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                    <Music size={24} color="var(--primary-color)" /> Recent Tracks
-                </h2>
-                {musics.length === 0 ? (
-                    <p style={{ color: 'var(--text-muted)' }}>No tracks available.</p>
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        {musics.map((music, i) => {
-                            const active = currentTrack?._id === music._id;
-                            const playing = active && isPlaying;
-                            return (
-                                <div
-                                    key={music._id}
-                                    className={`album-card ${active ? 'track-row-active' : ''}`}
-                                    style={{ padding: '0.75rem 1.25rem', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}
-                                    onClick={() => play(music, musics)}
-                                >
-                                    {/* index / playing indicator */}
-                                    <div style={{ width: '28px', textAlign: 'center', color: active ? 'var(--primary-color)' : 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                                        {playing ? <Pause size={16} /> : (active ? <Play size={16} /> : i + 1)}
-                                    </div>
-
-                                    {/* track icon */}
-                                    <div style={{ width: '40px', height: '40px', background: active ? 'var(--primary-color)' : '#333', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.3s' }}>
-                                        <Music size={20} color={active ? '#000' : 'rgba(255,255,255,0.6)'} />
-                                    </div>
-
-                                    {/* info */}
-                                    <div style={{ flex: 1, overflow: 'hidden' }}>
-                                        <div className="album-title" style={{ color: active ? 'var(--primary-color)' : 'white' }}>{music.title}</div>
-                                        <div className="album-artist">{music.artist?.username || 'Unknown Artist'}</div>
-                                    </div>
-                                    
-                                    {/* Like Button */}
-                                    <div style={{ marginRight: '1rem', cursor: 'pointer' }} onClick={(e) => handleToggleLike(e, music)}>
-                                        <Heart 
-                                            fill={likedSongs.some(s => s._id === music._id) ? "var(--primary-color)" : "transparent"} 
-                                            color={likedSongs.some(s => s._id === music._id) ? "var(--primary-color)" : "var(--text-muted)"} 
-                                            size={20} 
-                                        />
-                                    </div>
-
-                                    {/* play overlay hint */}
-                                    <div style={{ opacity: 0.5 }}>
-                                        {playing ? <Pause size={18} color="var(--primary-color)" /> : <Play size={18} />}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </section>
-
             {/* ── iTunes / Spotify / History Playlists ───────────────────────────────────── */}
             {history.length > 0 && (
                 <PlaylistRow title="Recently Played" icon={<Clock size={28} color="var(--primary-color)" />} tracks={history} likedSongs={likedSongs} toggleLike={handleToggleLike} />
