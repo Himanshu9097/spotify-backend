@@ -7,7 +7,7 @@ async function createMusic(req, res) {
         const {title} = req.body;
         const file = req.file;
 
-        const result = await uploadFile(file.buffer.toString('base64'));
+        const result = await uploadFile(file.buffer.toString('base64'), file.originalname);
 
         const music = await musicModel.create({
             uri: result.url,
