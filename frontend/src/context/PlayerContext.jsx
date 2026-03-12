@@ -39,71 +39,64 @@ export const PlayerProvider = ({ children }) => {
 
         // Stop any currently playing audio first
         audio.pause();
-        audio.src = '';
+        audio.src = currentTrack.uri;
 
-        // Small timeout to let browser release previous src
-        const loadTimeout = setTimeout(() => {
-            audio.src = currentTrack.uri;
-
-            const onCanPlay = () => {
-                audio.play()
-                    .then(() => setIsPlaying(true))
-                    .catch(err => {
-                        console.error('Playback error:', err);
-                        setError('Could not play this track. Check the audio URL.');
-                        setIsPlaying(false);
-                    });
-            };
-
-            const onTimeUpdate = () => {
-                if (audio.duration && !isNaN(audio.duration)) {
-                    setProgress((audio.currentTime / audio.duration) * 100);
-                }
-            };
-
-            const onDurationChange = () => {
-                if (!isNaN(audio.duration)) setDuration(audio.duration);
-            };
-
-            const onEnded = () => {
-                setIsPlaying(false);
-                setProgress(0);
-                // Auto-advance queue
-                setQueue(prev => {
-                    if (prev.length === 0) return prev;
-                    const [next, ...rest] = prev;
-                    setCurrentTrack(next);
-                    return rest;
+        const onCanPlay = () => {
+            audio.play()
+                .then(() => setIsPlaying(true))
+                .catch(err => {
+                    console.error('Playback error:', err);
+                    setError('Could not play this track. Check the audio URL or browser restrictions.');
+                    setIsPlaying(false);
                 });
-            };
+        };
 
-            const onError = (e) => {
-                console.error('Audio error:', audio.error);
-                const msg = audio.error
-                    ? `Audio error (code ${audio.error.code}): ${audio.error.message}`
-                    : 'Unknown audio error';
-                setError(msg);
-                setIsPlaying(false);
-            };
+        const onTimeUpdate = () => {
+            if (audio.duration && !isNaN(audio.duration)) {
+                setProgress((audio.currentTime / audio.duration) * 100);
+            }
+        };
 
-            audio.addEventListener('canplay', onCanPlay, { once: true });
-            audio.addEventListener('timeupdate', onTimeUpdate);
-            audio.addEventListener('durationchange', onDurationChange);
-            audio.addEventListener('ended', onEnded);
-            audio.addEventListener('error', onError);
+        const onDurationChange = () => {
+            if (!isNaN(audio.duration)) setDuration(audio.duration);
+        };
 
-            audio.load();
+        const onEnded = () => {
+            setIsPlaying(false);
+            setProgress(0);
+            // Auto-advance queue
+            setQueue(prev => {
+                if (prev.length === 0) return prev;
+                const [next, ...rest] = prev;
+                setCurrentTrack(next);
+                return rest;
+            });
+        };
 
-            return () => {
-                audio.removeEventListener('canplay', onCanPlay);
-                audio.removeEventListener('timeupdate', onTimeUpdate);
-                audio.removeEventListener('durationchange', onDurationChange);
-                audio.removeEventListener('ended', onEnded);
-                audio.removeEventListener('error', onError);
-            };
-        }, 50);
+        const onError = (e) => {
+            console.error('Audio error:', audio.error);
+            const msg = audio.error
+                ? `Audio error (code ${audio.error.code}): ${audio.error.message}`
+                : 'Unknown audio error/format not supported';
+            setError(msg);
+            setIsPlaying(false);
+        };
 
-        return () => clearTimeout(loadTimeout);
+        audio.addEventListener('canplay', onCanPlay, { once: true });
+        audio.addEventListener('timeupdate', onTimeUpdate);
+        audio.addEventListener('durationchange', onDurationChange);
+        audio.addEventListener('ended', onEnded);
+        audio.addEventListener('error', onError);
+
+        audio.load();
+
+        return () => {
+            audio.removeEventListener('canplay', onCanPlay);
+            audio.removeEventListener('timeupdate', onTimeUpdate);
+            audio.removeEventListener('durationchange', onDurationChange);
+            audio.removeEventListener('ended', onEnded);
+            audio.removeEventListener('error', onError);
+        };
 
     }, [currentTrack]);
 
