@@ -1,13 +1,66 @@
 import { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { Disc, Music, Play, Pause } from 'lucide-react';
+import { Disc, Music, Play, Pause, TrendingUp, Heart } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
+
+// Reusable Playlist Row Component
+function PlaylistRow({ title, icon, tracks }) {
+    const { play, currentTrack, isPlaying } = useContext(PlayerContext);
+    
+    if (!tracks || tracks.length === 0) return null;
+    
+    return (
+        <section style={{ marginTop: '3rem' }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '1.5rem' }}>
+                {icon} {title}
+            </h2>
+            <div className="card-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1.5rem' }}>
+                {tracks.map((music) => {
+                    const active = currentTrack?._id === music._id;
+                    const playing = active && isPlaying;
+                    return (
+                        <div
+                            key={music._id}
+                            className={`album-card ${active ? 'track-row-active' : ''}`}
+                            onClick={() => play(music, tracks)}
+                            style={{ position: 'relative' }}
+                        >
+                            <div className="album-image-placeholder" style={{ background: 'transparent', height: '180px', marginBottom: '1rem', position: 'relative' }}>
+                                {music.image ? (
+                                    <img src={music.image} alt="Cover" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                                ) : (
+                                    <div style={{width:'100%', height:'100%', background:'#333', borderRadius:'8px', display:'flex', alignItems:'center', justifyContent:'center'}}><Music size={40} color='rgba(255,255,255,0.6)'/></div>
+                                )}
+                                
+                                {/* Hover Play Button */}
+                                <div className="play-btn-overlay" style={{
+                                    position: 'absolute', right: '10px', bottom: '10px', width: '48px', height: '48px',
+                                    borderRadius: '50%', background: 'var(--primary-color)', display: 'flex', alignItems: 'center',
+                                    justifyContent: 'center', opacity: active ? 1 : 0, transition: 'var(--transition)',
+                                    boxShadow: '0 8px 8px rgba(0,0,0,0.3)', transform: active ? 'translateY(0)' : 'translateY(8px)'
+                                }}>
+                                    {playing ? <Pause size={24} color="#000" fill="#000" /> : <Play size={24} color="#000" fill="#000" style={{marginLeft: '4px'}} />}
+                                </div>
+                            </div>
+                            <div>
+                                <div className="album-title" style={{ color: active ? 'var(--primary-color)' : 'white' }}>{music.title}</div>
+                                <div className="album-artist">{music.artist?.username || 'Unknown Artist'}</div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </section>
+    );
+}
 
 function Home() {
     const [albums, setAlbums] = useState([]);
     const [musics, setMusics] = useState([]);
-    const [globalMusics, setGlobalMusics] = useState([]);
+    const [trendingIndian, setTrendingIndian] = useState([]);
+    const [romanticIndian, setRomanticIndian] = useState([]);
+    const [latestBollywood, setLatestBollywood] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const { play, currentTrack, isPlaying } = useContext(PlayerContext);
@@ -15,14 +68,18 @@ function Home() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [albumRes, musicRes, globalRes] = await Promise.all([
+                const [albumRes, musicRes, indianRes, romanticRes, bollywoodRes] = await Promise.all([
                     api.get('/music/albums'),
                     api.get('/music/'),
-                    api.get('/music/external/itunes?q=2024 hits&limit=10')
+                    api.get('/music/external/itunes?q=indian top hits&limit=6'),
+                    api.get('/music/external/itunes?q=romantic hindi song&limit=6'),
+                    api.get('/music/external/itunes?q=latest bollywood 2024&limit=6')
                 ]);
                 setAlbums(albumRes.data.albums);
                 setMusics(musicRes.data.musics);
-                setGlobalMusics(globalRes.data.musics);
+                setTrendingIndian(indianRes.data.musics);
+                setRomanticIndian(romanticRes.data.musics);
+                setLatestBollywood(bollywoodRes.data.musics);
             } catch (err) {
                 console.error('Failed to fetch data', err);
             } finally {
@@ -114,42 +171,10 @@ function Home() {
                 )}
             </section>
 
-            {/* ── Global Hits (iTunes API) ───────────────────────────────────── */}
-            {globalMusics.length > 0 && (
-                <section style={{ marginTop: '3rem' }}>
-                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                        <Play size={24} color="var(--primary-color)" /> Global Hits (Previews)
-                    </h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        {globalMusics.map((music, i) => {
-                            const active = currentTrack?._id === music._id;
-                            const playing = active && isPlaying;
-                            return (
-                                <div
-                                    key={music._id}
-                                    className={`album-card ${active ? 'track-row-active' : ''}`}
-                                    style={{ padding: '0.75rem 1.25rem', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}
-                                    onClick={() => play(music, globalMusics)}
-                                >
-                                    <div style={{ width: '28px', textAlign: 'center', color: active ? 'var(--primary-color)' : 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                                        {playing ? <Pause size={16} /> : (active ? <Play size={16} /> : i + 1)}
-                                    </div>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
-                                        {music.image ? <img src={music.image} alt="Cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{width:'100%', height:'100%', background:'#333', display:'flex', alignItems:'center', justifyContent:'center'}}><Music size={20} color='rgba(255,255,255,0.6)'/></div>}
-                                    </div>
-                                    <div style={{ flex: 1, overflow: 'hidden' }}>
-                                        <div className="album-title" style={{ color: active ? 'var(--primary-color)' : 'white' }}>{music.title}</div>
-                                        <div className="album-artist">{music.artist?.username || 'Unknown Artist'}</div>
-                                    </div>
-                                    <div style={{ opacity: 0.5 }}>
-                                        {playing ? <Pause size={18} color="var(--primary-color)" /> : <Play size={18} />}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </section>
-            )}
+            {/* ── iTunes Playlists ───────────────────────────────────── */}
+            <PlaylistRow title="Trending Indian Hits" icon={<TrendingUp size={28} color="var(--primary-color)" />} tracks={trendingIndian} />
+            <PlaylistRow title="Romantic Hindi Songs" icon={<Heart size={28} color="#e91429" />} tracks={romanticIndian} />
+            <PlaylistRow title="Latest Bollywood" icon={<Play size={28} color="var(--primary-color)" />} tracks={latestBollywood} />
 
         </div>
     );

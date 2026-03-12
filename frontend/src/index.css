@@ -603,3 +603,8 @@ a:hover {
   opacity: 1;
 }
 
+.album-card:hover .play-btn-overlay {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
