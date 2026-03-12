@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { Disc, Music, Play, Pause, TrendingUp, Heart } from 'lucide-react';
+import { Disc, Music, Play, Pause, TrendingUp, Heart, Clock } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 
 // Reusable Playlist Row Component
@@ -76,6 +76,7 @@ function Home() {
     const [romanticIndian, setRomanticIndian] = useState([]);
     const [latestBollywood, setLatestBollywood] = useState([]);
     const [likedSongs, setLikedSongs] = useState([]);
+    const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const { play, currentTrack, isPlaying } = useContext(PlayerContext);
@@ -83,13 +84,14 @@ function Home() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [albumRes, musicRes, indianRes, romanticRes, bollywoodRes, likedRes] = await Promise.all([
+                const [albumRes, musicRes, indianRes, romanticRes, bollywoodRes, likedRes, historyRes] = await Promise.all([
                     api.get('/music/albums'),
                     api.get('/music/'),
                     api.get('/music/external/spotify?q=indian top hits&limit=10'),
                     api.get('/music/external/spotify?q=romantic hindi song&limit=10'),
                     api.get('/music/external/spotify?q=latest bollywood 2024&limit=10'),
-                    api.get('/music/liked-songs').catch(() => ({ data: { musics: [] } }))
+                    api.get('/music/liked-songs').catch(() => ({ data: { musics: [] } })),
+                    api.get('/music/history').catch(() => ({ data: { musics: [] } }))
                 ]);
                 setAlbums(albumRes.data.albums);
                 setMusics(musicRes.data.musics);
@@ -97,6 +99,7 @@ function Home() {
                 setRomanticIndian(romanticRes.data.musics);
                 setLatestBollywood(bollywoodRes.data.musics);
                 setLikedSongs(likedRes.data?.musics || []);
+                setHistory(historyRes.data?.musics || []);
             } catch (err) {
                 console.error('Failed to fetch data', err);
             } finally {
@@ -219,7 +222,11 @@ function Home() {
                 )}
             </section>
 
-            {/* ── iTunes / Spotify Playlists ───────────────────────────────────── */}
+            {/* ── iTunes / Spotify / History Playlists ───────────────────────────────────── */}
+            {history.length > 0 && (
+                <PlaylistRow title="Recently Played" icon={<Clock size={28} color="var(--primary-color)" />} tracks={history} likedSongs={likedSongs} toggleLike={handleToggleLike} />
+            )}
+            
             {likedSongs.length > 0 && (
                 <PlaylistRow title="Liked Songs" icon={<Heart size={28} fill="var(--primary-color)" color="var(--primary-color)" />} tracks={likedSongs} likedSongs={likedSongs} toggleLike={handleToggleLike} />
             )}

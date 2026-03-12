@@ -1,4 +1,5 @@
 import { createContext, useState, useRef, useEffect, useCallback } from 'react';
+import api from '../api';
 
 export const PlayerContext = createContext();
 
@@ -113,6 +114,16 @@ export const PlayerProvider = ({ children }) => {
 
         setQueue(trackQueue.filter(t => t._id !== track._id));
         setCurrentTrack(track);
+
+        // Record History
+        api.post('/music/history', {
+            musicId: track._id,
+            title: track.title,
+            artistName: track.artist?.username || track.artist || 'Unknown Artist',
+            uri: track.uri,
+            image: track.image,
+            isExternal: track.isExternal || false
+        }).catch(err => console.error("Could not record history", err));
     }, [currentTrack]);
 
     const togglePlay = useCallback(() => {

@@ -27,4 +27,8 @@ router.get("/albums/:albumId",authMiddleware.authUser,musicController.getAllAlbu
 router.post("/liked-songs", authMiddleware.authUser, musicController.toggleLike);
 router.get("/liked-songs", authMiddleware.authUser, musicController.getLikedSongs);
 
+// History
+router.post("/history", authMiddleware.authUser, musicController.recordHistory);
+router.get("/history", authMiddleware.authUser, musicController.getHistory);
+
 module.exports = router;

@@ -1,6 +1,7 @@
 const musicModel = require("../model/music.model");
 const albumModel = require("../model/album.model");
 const likedSongModel = require("../model/likedSong.model");
+const historyModel = require("../model/history.model");
 const {uploadFile} = require("../services/storage.service");
 
 async function createMusic(req, res) {
@@ -270,6 +271,55 @@ async function getLikedSongs(req, res) {
     }
 }
 
+async function recordHistory(req, res) {
+    try {
+        const { musicId, title, artistName, uri, image, isExternal } = req.body;
+        const userId = req.user.id;
+
+        // Remove older entry of same song to put it at top
+        await historyModel.deleteMany({ user: userId, musicId });
+
+        await historyModel.create({
+            user: userId,
+            musicId,
+            title,
+            artist: { username: artistName },
+            uri,
+            image,
+            isExternal: isExternal || false,
+            playedAt: new Date()
+        });
+
+        res.status(200).json({ message: "History recorded" });
+    } catch (err) {
+        console.error("Error recording history:", err);
+        res.status(500).json({ message: "Error recording history" });
+    }
+}
+
+async function getHistory(req, res) {
+    try {
+        const userId = req.user.id;
+        const history = await historyModel.find({ user: userId })
+            .sort({ playedAt: -1 })
+            .limit(20);
+        
+        const musics = history.map(song => ({
+            _id: song.musicId,
+            title: song.title,
+            artist: song.artist,
+            uri: song.uri,
+            image: song.image,
+            isExternal: song.isExternal
+        }));
+
+        res.status(200).json({ musics });
+    } catch (err) {
+        console.error("Error fetching history:", err);
+        res.status(500).json({ message: "Error fetching history" });
+    }
+}
+
 module.exports = {
     createMusic, 
     createAlbum, 
@@ -278,5 +328,7 @@ module.exports = {
     getAllAlbumById,
     searchExternalMusic,
     toggleLike,
-    getLikedSongs
+    getLikedSongs,
+    recordHistory,
+    getHistory
 };
