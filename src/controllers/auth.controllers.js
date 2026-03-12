@@ -1,6 +1,7 @@
-const  userModel = require("../model/user.model");
-const jwt = require("jsonwebtoken")
-const bcrypt = require('bcryptjs')
+const userModel = require("../model/user.model");
+const jwt = require("jsonwebtoken");
+const bcrypt = require('bcryptjs');
+const { uploadFile } = require("../services/storage.service");
 
 async function registerUser(req,res) {
 
@@ -42,7 +43,8 @@ async function registerUser(req,res) {
             id:user._id,
             username:user.username,
             email:user.email,
-            role:user.role
+            role:user.role,
+            profileImage:user.profileImage
         }
     })
 
@@ -85,6 +87,7 @@ async function loginUser(req,res) {
             username:user.username,
             email:user.email,
             role:user.role,
+            profileImage:user.profileImage
         }
     })
 
@@ -96,4 +99,43 @@ async function logoutUser(req,res){
     res.status(200).json({message:"user logged out successfully"})
 }
 
-module.exports = {registerUser,loginUser,logoutUser};
+async function updateProfile(req, res) {
+    try {
+        const userId = req.user.id;
+        const { username } = req.body;
+        const file = req.file;
+
+        const user = await userModel.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        if (username) {
+            // Check if another user has this username
+            const existingUser = await userModel.findOne({ username, _id: { $ne: userId } });
+            if (existingUser) return res.status(409).json({ message: "Username already taken" });
+            user.username = username;
+        }
+
+        if (file) {
+            const profileImageObj = await uploadFile(file.buffer, file.originalname);
+            user.profileImage = profileImageObj.url;
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            message: "Profile updated successfully",
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                profileImage: user.profileImage
+            }
+        });
+    } catch (err) {
+        console.error("Profile update error:", err);
+        res.status(500).json({ message: "Failed to update profile" });
+    }
+}
+
+module.exports = {registerUser,loginUser,logoutUser,updateProfile};

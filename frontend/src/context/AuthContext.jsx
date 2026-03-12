@@ -8,7 +8,6 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check if user is in localStorage
         const savedUser = localStorage.getItem("spotifyUser");
         if (savedUser) {
             setUser(JSON.parse(savedUser));
@@ -36,8 +35,18 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem("spotifyUser");
     };
 
+    const updateProfile = async (formData) => {
+        const res = await api.put("/auth/profile", formData, {
+            headers: { "Content-Type": "multipart/form-data" }
+        });
+        const updatedUser = res.data.user;
+        setUser(updatedUser);
+        localStorage.setItem("spotifyUser", JSON.stringify(updatedUser));
+        return updatedUser;
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, loading, updateProfile }}>
             {!loading && children}
         </AuthContext.Provider>
     );

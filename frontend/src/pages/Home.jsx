@@ -139,16 +139,12 @@ function Home() {
     const isTrackPlaying = (track) =>
         currentTrack?._id === track._id && isPlaying;
 
-    // Build Quick Links Array mimicking top Spotify shortcuts
+    // Build Quick Links Array — only real playlists (no individual song tiles)
     const quickLinks = [];
-    if (likedSongs.length > 0) quickLinks.push({ id: 'liked', name: 'Liked Songs', type: 'playlist', image: null, icon: <Heart fill="white" color="white" size={28} /> });
-    
-    pinnedPlaylists.slice(0, 4).forEach(pl => {
+    if (likedSongs.length > 0) quickLinks.push({ id: 'liked', name: 'Liked Songs', type: 'liked', image: likedSongs[0]?.image || null, icon: <Heart fill="white" color="white" size={28} /> });
+    if (history.length > 0) quickLinks.push({ id: 'history', name: 'Recently Played', type: 'link', link: '/history', image: history[0]?.image || null, icon: <Clock size={28} color="white" /> });
+    pinnedPlaylists.slice(0, 6).forEach(pl => {
         quickLinks.push({ id: pl._id, name: pl.name, type: 'custom', image: pl.songs?.[0]?.image, icon: <Disc size={28} color="white" />, link: `/playlist/${pl._id}` });
-    });
-    
-    history.slice(0, 8 - quickLinks.length).forEach(h => {
-        quickLinks.push({ id: h._id, name: h.title, type: 'history', image: h.image, icon: <Music size={28} color="white" />, trackInfo: h });
     });
 
     return (
@@ -172,8 +168,7 @@ function Home() {
                                 className="quick-link-card"
                                 onClick={() => {
                                     if (link.link) navigate(link.link);
-                                    else if (link.type === 'history') play(link.trackInfo, history);
-                                    else if (link.type === 'playlist') document.getElementById('liked-songs-section')?.scrollIntoView({ behavior: 'smooth' });
+                                    else if (link.type === 'liked') document.getElementById('liked-songs-section')?.scrollIntoView({ behavior: 'smooth' });
                                 }}
                             >
                                 {link.image ? (
@@ -185,7 +180,7 @@ function Home() {
                                 )}
                                 <div className="quick-link-title">{link.name}</div>
                                 <div className="quick-link-play-btn">
-                                    {active ? <Pause size={20} fill="#000" color="#000" /> : <Play size={20} fill="#000" color="#000" style={{marginLeft: '2px'}} />}
+                                    <Play size={20} fill="#000" color="#000" style={{marginLeft: '2px'}} />
                                 </div>
                             </div>
                         );
