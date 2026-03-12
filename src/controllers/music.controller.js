@@ -167,14 +167,14 @@ async function searchExternalMusic(req, res) {
         }
         
         // Map Spotify data to our standard player format
-        // Only return tracks that have a preview_url (some Spotify tracks don't allow 30s previews)
-        const musics = data.tracks.items
-            .filter(track => track.preview_url)
-            .map(track => ({
+        // Spotify has recently removed preview_url for many commercial tracks.
+        // We will no longer filter them out so the UI still displays them beautifully!
+        const musics = data.tracks.items.map(track => ({
                 _id: track.id,
                 title: track.name,
                 artist: { username: track.artists.map(a => a.name).join(', ') },
-                uri: track.preview_url,            // 30s MP3 preview
+                // Use a fallback royalty-free audio string if preview_url is blocked by Spotify
+                uri: track.preview_url || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
                 image: track.album.images[0]?.url, // Highest resolution image
                 isExternal: true
             }));
