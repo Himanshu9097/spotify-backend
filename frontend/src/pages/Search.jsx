@@ -7,13 +7,15 @@ import { PlayerContext } from '../context/PlayerContext';
 function Search() {
     const [query, setQuery] = useState('');
     const [albums, setAlbums] = useState([]);
-    const [musics, setMusics] = useState([]);
+    const [localMusics, setLocalMusics] = useState([]);
+    const [externalMusics, setExternalMusics] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [searchLoading, setSearchLoading] = useState(false);
     const navigate = useNavigate();
     const { play, currentTrack, isPlaying } = useContext(PlayerContext);
 
+    // Fetch local database ONCE
     useEffect(() => {
-        // Only search if query starts getting long enough or fetch all at start? Let's just fetch all and filter client side.
         const fetchAllData = async () => {
             setLoading(true);
             try {
@@ -22,7 +24,7 @@ function Search() {
                     api.get('/music/')
                 ]);
                 setAlbums(albumRes.data.albums);
-                setMusics(musicRes.data.musics);
+                setLocalMusics(musicRes.data.musics);
             } catch (error) {
                 console.error("Error fetching data for search:", error);
             } finally {
@@ -32,7 +34,29 @@ function Search() {
         fetchAllData();
     }, []);
 
-    const filteredMusics = musics.filter(music =>
+    // Debounced Search for External Spotify API
+    useEffect(() => {
+        if (!query.trim()) {
+            setExternalMusics([]);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            setSearchLoading(true);
+            try {
+                const res = await api.get(`/music/external/spotify?q=${encodeURIComponent(query)}&limit=15`);
+                setExternalMusics(res.data.musics || []);
+            } catch(e) {
+                console.error("External search error:", e);
+            } finally {
+                setSearchLoading(false);
+            }
+        }, 600); // 600ms latency protection to prevent backend spam
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [query]);
+
+    const filteredMusics = localMusics.filter(music =>
         music.title?.toLowerCase().includes(query.toLowerCase()) ||
         music.artist?.username?.toLowerCase().includes(query.toLowerCase())
     );
@@ -41,6 +65,10 @@ function Search() {
         album.title?.toLowerCase().includes(query.toLowerCase()) ||
         album.artist?.username?.toLowerCase().includes(query.toLowerCase())
     );
+
+    // Merge internal + external music results and remove dupes
+    const allCombinedMusics = [...filteredMusics, ...externalMusics];
+    const uniqueMusics = Array.from(new Map(allCombinedMusics.map(item => [item._id, item])).values());
 
     return (
         <div className="content-wrapper fade-in" style={{ paddingTop: '1rem' }}>
@@ -63,11 +91,14 @@ function Search() {
                 <div style={{ marginTop: '3rem' }}>
 
                     {/* Top Result / Tracks */}
-                    {filteredMusics.length > 0 && (
+                    {uniqueMusics.length > 0 && (
                         <section style={{ marginBottom: '3rem' }}>
-                            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Songs</h2>
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                Songs
+                                {searchLoading && <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>(Searching global database...)</span>}
+                            </h2>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                {filteredMusics.slice(0, 10).map((music, i) => {
+                                {uniqueMusics.slice(0, 20).map((music, i) => {
                                     const active = currentTrack?._id === music._id;
                                     const playing = active && isPlaying;
                                     return (
@@ -75,11 +106,15 @@ function Search() {
                                             key={music._id}
                                             className={`album-card ${active ? 'track-row-active' : ''}`}
                                             style={{ padding: '0.75rem 1.25rem', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}
-                                            onClick={() => play(music, filteredMusics)}
+                                            onClick={() => play(music, uniqueMusics)}
                                         >
                                             {/* start icon / play */}
-                                            <div style={{ width: '40px', height: '40px', background: active ? 'var(--primary-color)' : '#333', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                <Music size={20} color={active ? '#000' : 'rgba(255,255,255,0.6)'} />
+                                            <div style={{ width: '40px', height: '40px', background: active ? 'var(--primary-color)' : '#333', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+                                                {music.image ? (
+                                                    <img src={music.image} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                ) : (
+                                                    <Music size={20} color={active ? '#000' : 'rgba(255,255,255,0.6)'} />
+                                                )}
                                             </div>
 
                                             <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -121,7 +156,7 @@ function Search() {
                         </section>
                     )}
 
-                    {filteredMusics.length === 0 && filteredAlbums.length === 0 && query !== '' && (
+                    {uniqueMusics.length === 0 && filteredAlbums.length === 0 && query !== '' && !searchLoading && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', color: 'var(--text-muted)' }}>
                             <h3>No results found for "{query}"</h3>
                             <p>Please make sure your words are spelled correctly or use less or different keywords.</p>
