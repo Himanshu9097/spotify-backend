@@ -167,17 +167,35 @@ async function searchExternalMusic(req, res) {
         }
         
         // Map Spotify data to our standard player format
-        // Spotify has recently removed preview_url for many commercial tracks.
-        // We will no longer filter them out so the UI still displays them beautifully!
-        const musics = data.tracks.items.map(track => ({
-                _id: track.id,
-                title: track.name,
-                artist: { username: track.artists.map(a => a.name).join(', ') },
-                // Use a fallback royalty-free audio string if preview_url is blocked by Spotify
-                uri: track.preview_url || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-                image: track.album.images[0]?.url, // Highest resolution image
-                isExternal: true
-            }));
+        let musics = data.tracks.items.map(track => ({
+            _id: track.id,
+            title: track.name,
+            artist: { username: track.artists.map(a => a.name).join(', ') },
+            uri: track.preview_url, // Often null due to recent Spotify restrictions
+            image: track.album.images[0]?.url, // Highest resolution image
+            isExternal: true
+        }));
+
+        // Cross-reference with iTunes Search API to retrieve missing audio previews
+        musics = await Promise.all(musics.map(async (m) => {
+            if (!m.uri) {
+                try {
+                    const cleanArtist = m.artist.username.split(',')[0];
+                    const itunesRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(m.title + ' ' + cleanArtist)}&entity=song&limit=1`);
+                    const itunesData = await itunesRes.json();
+                    if (itunesData.results && itunesData.results.length > 0 && itunesData.results[0].previewUrl) {
+                        m.uri = itunesData.results[0].previewUrl;
+                    }
+                } catch(e) {
+                    // Ignore errors silently for individual failed fetches
+                }
+            }
+            // If iTunes still fails, use fallback royalty-free audio to prevent crashing the player
+            if (!m.uri) {
+                m.uri = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+            }
+            return m;
+        }));
 
         res.status(200).json({
             message: "External musics fetched successfully",
