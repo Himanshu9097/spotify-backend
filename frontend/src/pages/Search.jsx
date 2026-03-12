@@ -1,11 +1,13 @@
 import { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search as SearchIcon, Play, Pause, Music, Disc } from 'lucide-react';
 import api from '../api';
 import { PlayerContext } from '../context/PlayerContext';
 
 function Search() {
-    const [query, setQuery] = useState('');
+    const [searchParams] = useSearchParams();
+    const query = searchParams.get('q') || '';
+
     const [albums, setAlbums] = useState([]);
     const [localMusics, setLocalMusics] = useState([]);
     const [externalMusics, setExternalMusics] = useState([]);
@@ -72,20 +74,7 @@ function Search() {
 
     return (
         <div className="content-wrapper fade-in" style={{ paddingTop: '1rem' }}>
-
-            {/* Search Input */}
-            <div className="search-bar-container">
-                <label className="search-input-wrapper">
-                    <SearchIcon size={24} color="var(--text-muted)" />
-                    <input
-                        type="text"
-                        placeholder="What do you want to listen to?"
-                        className="search-input"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                    />
-                </label>
-            </div>
+            {/* Search Input removed: Now using top Navbar search seamlessly */}
 
             {loading ? <div className="loader"></div> : (
                 <div style={{ marginTop: '3rem' }}>
