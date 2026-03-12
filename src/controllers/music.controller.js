@@ -150,7 +150,7 @@ async function getSpotifyToken() {
 async function searchExternalMusic(req, res) {
     try {
         const query = req.query.q || "top hits";
-        const limit = req.query.limit || 20;
+        const limit = Math.min(parseInt(req.query.limit) || 10, 10);
 
         const token = await getSpotifyToken();
         

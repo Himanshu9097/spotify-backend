@@ -71,9 +71,9 @@ function Home() {
                 const [albumRes, musicRes, indianRes, romanticRes, bollywoodRes] = await Promise.all([
                     api.get('/music/albums'),
                     api.get('/music/'),
-                    api.get('/music/external/spotify?q=indian top hits&limit=30'),
-                    api.get('/music/external/spotify?q=romantic hindi song&limit=30'),
-                    api.get('/music/external/spotify?q=latest bollywood 2024&limit=30')
+                    api.get('/music/external/spotify?q=indian top hits&limit=10'),
+                    api.get('/music/external/spotify?q=romantic hindi song&limit=10'),
+                    api.get('/music/external/spotify?q=latest bollywood 2024&limit=10')
                 ]);
                 setAlbums(albumRes.data.albums);
                 setMusics(musicRes.data.musics);
