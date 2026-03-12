@@ -77,6 +77,7 @@ function Home() {
     const [latestBollywood, setLatestBollywood] = useState([]);
     const [likedSongs, setLikedSongs] = useState([]);
     const [history, setHistory] = useState([]);
+    const [pinnedPlaylists, setPinnedPlaylists] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const { play, currentTrack, isPlaying } = useContext(PlayerContext);
@@ -84,14 +85,15 @@ function Home() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [albumRes, musicRes, indianRes, romanticRes, bollywoodRes, likedRes, historyRes] = await Promise.all([
+                const [albumRes, musicRes, indianRes, romanticRes, bollywoodRes, likedRes, historyRes, playlistRes] = await Promise.all([
                     api.get('/music/albums'),
                     api.get('/music/'),
                     api.get('/music/external/spotify?q=indian top hits&limit=10'),
                     api.get('/music/external/spotify?q=romantic hindi song&limit=10'),
                     api.get('/music/external/spotify?q=latest bollywood 2024&limit=10'),
                     api.get('/music/liked-songs').catch(() => ({ data: { musics: [] } })),
-                    api.get('/music/history').catch(() => ({ data: { musics: [] } }))
+                    api.get('/music/history').catch(() => ({ data: { musics: [] } })),
+                    api.get('/playlists').catch(() => ({ data: { playlists: [] } }))
                 ]);
                 setAlbums(albumRes.data.albums);
                 setMusics(musicRes.data.musics);
@@ -100,6 +102,7 @@ function Home() {
                 setLatestBollywood(bollywoodRes.data.musics);
                 setLikedSongs(likedRes.data?.musics || []);
                 setHistory(historyRes.data?.musics || []);
+                setPinnedPlaylists(playlistRes.data?.playlists?.filter(p => p.isPinned) || []);
             } catch (err) {
                 console.error('Failed to fetch data', err);
             } finally {
@@ -226,10 +229,39 @@ function Home() {
             {history.length > 0 && (
                 <PlaylistRow title="Recently Played" icon={<Clock size={28} color="var(--primary-color)" />} tracks={history} likedSongs={likedSongs} toggleLike={handleToggleLike} />
             )}
+            {history.length === 0 && (
+                <div style={{ marginTop: '3rem' }}>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '1.5rem', opacity: 0.5 }}>
+                        <Clock size={28} color="white" /> Recently Played
+                    </h2>
+                    <p style={{ color: 'var(--text-muted)' }}>Play some songs to build your history!</p>
+                </div>
+            )}
             
             {likedSongs.length > 0 && (
                 <PlaylistRow title="Liked Songs" icon={<Heart size={28} fill="var(--primary-color)" color="var(--primary-color)" />} tracks={likedSongs} likedSongs={likedSongs} toggleLike={handleToggleLike} />
             )}
+            {likedSongs.length === 0 && (
+                <div style={{ marginTop: '3rem' }}>
+                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '1.5rem', opacity: 0.5 }}>
+                        <Heart size={28} color="white" /> Liked Songs
+                    </h2>
+                    <p style={{ color: 'var(--text-muted)' }}>Tap the heart on any song to save it here!</p>
+                </div>
+            )}
+
+            {/* Render any pinned user Custom Playlists */}
+            {pinnedPlaylists.map(pl => (
+                <PlaylistRow 
+                    key={pl._id} 
+                    title={pl.name} 
+                    icon={<Disc size={28} color="var(--primary-color)" />} 
+                    tracks={pl.songs.map(s => ({ ...s, _id: s.musicId }))}
+                    likedSongs={likedSongs} 
+                    toggleLike={handleToggleLike} 
+                />
+            ))}
+
             <PlaylistRow title="Trending Indian Hits" icon={<TrendingUp size={28} color="var(--primary-color)" />} tracks={trendingIndian} likedSongs={likedSongs} toggleLike={handleToggleLike} />
             <PlaylistRow title="Romantic Hindi Songs" icon={<Heart size={28} color="#e91429" />} tracks={romanticIndian} likedSongs={likedSongs} toggleLike={handleToggleLike} />
             <PlaylistRow title="Latest Bollywood" icon={<Play size={28} color="var(--primary-color)" />} tracks={latestBollywood} likedSongs={likedSongs} toggleLike={handleToggleLike} />

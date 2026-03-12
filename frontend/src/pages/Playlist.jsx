@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
-import { Play, Pause, Music, Edit2, Plus, Search } from 'lucide-react';
+import { Play, Pause, Music, Edit2, Plus, Search, Pin, PinOff } from 'lucide-react';
 import { PlayerContext } from '../context/PlayerContext';
 
 function Playlist() {
@@ -43,6 +43,15 @@ function Playlist() {
             setIsEditing(false);
         } catch (err) {
             console.error("Failed to rename playlist", err);
+        }
+    };
+
+    const handlePinToggle = async () => {
+        try {
+            const res = await api.post(`/playlists/${id}/pin`);
+            setPlaylist(res.data.playlist);
+        } catch (err) {
+            console.error("Failed to pin playlist", err);
         }
     };
 
@@ -120,12 +129,24 @@ function Playlist() {
                         </div>
                     ) : (
                         <h1 
-                            onClick={() => setIsEditing(true)} 
-                            style={{ fontSize: '4rem', fontWeight: 800, margin: 0, lineHeight: 1.1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem' }}
-                            title="Click to rename"
+                            style={{ fontSize: '4rem', fontWeight: 800, margin: 0, lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: '1rem' }}
                         >
-                            {playlist.name}
-                            <Edit2 size={24} color="var(--text-muted)" style={{ opacity: 0.5 }} />
+                            <span onClick={() => setIsEditing(true)} style={{ cursor: 'pointer' }} title="Click to rename">
+                                {playlist.name}
+                            </span>
+                            <Edit2 size={24} color="var(--text-muted)" style={{ opacity: 0.5, cursor: 'pointer' }} onClick={() => setIsEditing(true)} />
+                            
+                            <button 
+                                onClick={handlePinToggle} 
+                                title={playlist.isPinned ? "Unpin from Home" : "Pin to Home"}
+                                style={{
+                                    background: 'transparent', border: 'none', marginLeft: 'auto',
+                                    color: playlist.isPinned ? 'var(--primary-color)' : 'var(--text-muted)',
+                                    cursor: 'pointer', transition: 'var(--transition)'
+                                }}
+                            >
+                                {playlist.isPinned ? <PinOff size={28} /> : <Pin size={28} />}
+                            </button>
                         </h1>
                     )}
                     

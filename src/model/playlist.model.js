@@ -11,6 +11,10 @@ const playlistSchema = new mongoose.Schema({
         ref: 'user',
         required: true
     },
+    isPinned: {
+        type: Boolean,
+        default: false
+    },
     songs: [{
         musicId: String,
         title: String,

@@ -16,5 +16,7 @@ router.get("/:id", playlistController.getPlaylistById);
 router.put("/:id", playlistController.renamePlaylist);
 // Add a song to the playlist
 router.post("/:id/add-song", playlistController.addSongToPlaylist);
+// Toggle pinning the playlist
+router.post("/:id/pin", playlistController.togglePinPlaylist);
 
 module.exports = router;

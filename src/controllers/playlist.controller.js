@@ -88,10 +88,29 @@ async function addSongToPlaylist(req, res) {
     }
 }
 
+async function togglePinPlaylist(req, res) {
+    try {
+        const userId = req.user.id;
+        const { id } = req.params;
+        
+        const playlist = await playlistModel.findOne({ _id: id, user: userId });
+        if (!playlist) return res.status(404).json({ message: "Playlist not found" });
+
+        playlist.isPinned = !playlist.isPinned;
+        await playlist.save();
+        
+        res.status(200).json({ message: "Playlist pin updated", playlist });
+    } catch (err) {
+        console.error("Toggle pin error:", err);
+        res.status(500).json({ message: "Failed to pin playlist" });
+    }
+}
+
 module.exports = {
     createPlaylist,
     getUserPlaylists,
     getPlaylistById,
     renamePlaylist,
-    addSongToPlaylist
+    addSongToPlaylist,
+    togglePinPlaylist
 };
