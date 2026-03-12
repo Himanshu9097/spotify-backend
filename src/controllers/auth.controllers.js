@@ -117,7 +117,8 @@ async function updateProfile(req, res) {
 
         if (file) {
             try {
-                const profileImageObj = await uploadFile(file.buffer, `profile_${userId}_${Date.now()}`, "complete-backend/profiles");
+                const base64 = file.buffer.toString('base64');
+                const profileImageObj = await uploadFile(base64, `profile_${userId}_${Date.now()}.jpg`, "complete-backend/profiles");
                 user.profileImage = profileImageObj.url;
             } catch (uploadErr) {
                 console.error("Image upload error:", uploadErr.message);
