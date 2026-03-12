@@ -4,11 +4,11 @@ const ImageKitClient = new ImageKit({
     privateKey: process.env['IMAGEKIT_PRIVATE_KEY'],
 })
 
-async function uploadFile(file, originalName) {
+async function uploadFile(file, originalName, folder = "complete-backend/music") {
     const result = await ImageKitClient.files.upload({
         file,
-        fileName: originalName || ("music_" + Date.now()),
-        folder: "complete-backend/music"
+        fileName: originalName || ("file_" + Date.now()),
+        folder
     })
 
     return result;

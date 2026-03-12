@@ -28,18 +28,17 @@ function Profile() {
         setMessage({ text: '', type: '' });
         try {
             const formData = new FormData();
-            if (username !== user?.username) formData.append('username', username);
+            // Always send username so backend has it available
+            formData.append('username', username.trim());
             if (selectedFile) formData.append('profileImage', selectedFile);
 
-            if (formData.has('username') || selectedFile) {
-                await updateProfile(formData);
-                setMessage({ text: 'Profile updated successfully!', type: 'success' });
-                setSelectedFile(null);
-            } else {
-                setMessage({ text: 'No changes to save.', type: 'info' });
-            }
+            await updateProfile(formData);
+            setMessage({ text: 'Profile updated successfully!', type: 'success' });
+            setSelectedFile(null);
         } catch (err) {
-            setMessage({ text: err.response?.data?.message || 'Failed to update profile.', type: 'error' });
+            const serverMsg = err.response?.data?.message || err.message || 'Failed to update profile.';
+            setMessage({ text: serverMsg, type: 'error' });
+            console.error('Profile update error:', err);
         } finally {
             setSaving(false);
         }

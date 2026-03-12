@@ -108,16 +108,21 @@ async function updateProfile(req, res) {
         const user = await userModel.findById(userId);
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        if (username) {
+        if (username && username.trim() && username.trim() !== user.username) {
             // Check if another user has this username
-            const existingUser = await userModel.findOne({ username, _id: { $ne: userId } });
+            const existingUser = await userModel.findOne({ username: username.trim(), _id: { $ne: userId } });
             if (existingUser) return res.status(409).json({ message: "Username already taken" });
-            user.username = username;
+            user.username = username.trim();
         }
 
         if (file) {
-            const profileImageObj = await uploadFile(file.buffer, file.originalname);
-            user.profileImage = profileImageObj.url;
+            try {
+                const profileImageObj = await uploadFile(file.buffer, `profile_${userId}_${Date.now()}`, "complete-backend/profiles");
+                user.profileImage = profileImageObj.url;
+            } catch (uploadErr) {
+                console.error("Image upload error:", uploadErr.message);
+                return res.status(500).json({ message: "Image upload failed: " + uploadErr.message });
+            }
         }
 
         await user.save();
@@ -133,8 +138,8 @@ async function updateProfile(req, res) {
             }
         });
     } catch (err) {
-        console.error("Profile update error:", err);
-        res.status(500).json({ message: "Failed to update profile" });
+        console.error("Profile update error:", err.message);
+        res.status(500).json({ message: err.message || "Failed to update profile" });
     }
 }
 
