@@ -11,6 +11,8 @@ const upload = multer({
 
 
 
+router.get("/external/itunes", authMiddleware.authUser, musicController.searchExternalMusic);
+
 router.post("/upload",authMiddleware.authArtist,upload.single("music"),musicController.createMusic);
 
 router.post("/album",authMiddleware.authArtist,musicController.createAlbum);

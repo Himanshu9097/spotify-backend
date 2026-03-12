@@ -25,10 +25,10 @@ function MusicPlayer() {
         <div className="music-player">
             {/* ── Track info ──────────────────────────────────────── */}
             <div className="player-track-info">
-                <div className="player-track-icon" style={{ background: error ? '#e91429' : undefined }}>
+                <div className="player-track-icon" style={{ background: error ? '#e91429' : (currentTrack.image ? 'transparent' : undefined), padding: currentTrack.image ? 0 : undefined }}>
                     {error
                         ? <AlertCircle size={18} color="#fff" />
-                        : <Music size={18} color="#000" />
+                        : (currentTrack.image ? <img src={currentTrack.image} alt="cover" style={{width:'100%', height:'100%', objectFit:'cover', borderRadius:'4px'}} /> : <Music size={18} color="#000" />)
                     }
                 </div>
                 <div className="player-track-text" style={{ overflow: 'hidden' }}>

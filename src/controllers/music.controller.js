@@ -116,10 +116,42 @@ async function getAllAlbumById(req, res) {
     }
 }
 
+async function searchExternalMusic(req, res) {
+    try {
+        const query = req.query.q || "top hits";
+        const limit = req.query.limit || 20;
+        
+        // Fetch from iTunes API (open source, no auth)
+        const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=${limit}`);
+        const data = await response.json();
+        
+        // Map iTunes data to our standard player format
+        const musics = data.results.map(track => ({
+            _id: track.trackId.toString(),
+            title: track.trackName,
+            artist: { username: track.artistName },
+            uri: track.previewUrl,            // Standard MP4 Audio
+            image: track.artworkUrl100?.replace('100x100bb', '300x300bb'),
+            isExternal: true
+        }));
+
+        res.status(200).json({
+            message: "External musics fetched successfully",
+            musics: musics
+        });
+    } catch(err) {
+        console.log("External search error:", err);
+        res.status(500).json({
+            message: "Error fetching external musics"
+        });
+    }
+}
+
 module.exports = {
     createMusic, 
     createAlbum, 
     getAllMusic, 
     getAllAlbums, 
-    getAllAlbumById
+    getAllAlbumById,
+    searchExternalMusic
 };
