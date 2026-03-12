@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import CreateAlbum from './pages/CreateAlbum';
 import UploadMusic from './pages/UploadMusic';
 import AlbumDetails from './pages/AlbumDetails';
+import Playlist from './pages/Playlist';
 
 const ProtectedRoute = ({ children, requireArtist }) => {
   const { user, loading } = useContext(AuthContext);
@@ -61,6 +62,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AlbumDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/playlist/:id"
+            element={
+              <ProtectedRoute>
+                <Playlist />
               </ProtectedRoute>
             }
           />
