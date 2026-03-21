@@ -4,7 +4,7 @@ import { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api';
 
-function Sidebar() {
+function Sidebar({ isMobileMenuOpen, setMobileMenuOpen }) {
     const location = useLocation();
     const navigate = useNavigate();
     const { user } = useContext(AuthContext);
@@ -39,9 +39,11 @@ function Sidebar() {
     const isActive = (path) => location.pathname === path;
 
     return (
-        <aside className="sidebar" style={{ background: '#000', padding: '0.5rem', paddingBottom: '0' }}>
+        <>
+        <div className="mobile-overlay" onClick={() => setMobileMenuOpen(false)}></div>
+        <aside className={`sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`} style={{ background: '#000', padding: '0.5rem', paddingBottom: '0' }}>
             {/* The main box */}
-            <div style={{ background: '#121212', borderRadius: '8px', padding: '1rem 0.5rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div onClick={() => setMobileMenuOpen(false)} style={{ background: '#121212', borderRadius: '8px', padding: '1rem 0.5rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#a7a7a7', fontWeight: 700, cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#a7a7a7'}>
@@ -123,6 +125,7 @@ function Sidebar() {
                 </div>
             </div>
         </aside>
+        </>
     );
 }
 

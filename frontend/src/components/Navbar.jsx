@@ -1,9 +1,9 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Home, Search, Bell, Users, User, LogOut, UploadCloud, FolderPlus, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, Search, Bell, Users, User, LogOut, UploadCloud, FolderPlus, Settings, Menu } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
-function Navbar() {
+function Navbar({ setMobileMenuOpen }) {
     const { user, logout } = useContext(AuthContext);
     const navigate = useNavigate();
     const location = useLocation();
@@ -53,17 +53,22 @@ function Navbar() {
         <nav className="navbar" style={{ padding: '0.75rem 1.5rem', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: 'none', height: '64px' }}>
             {/* Left Nav Controls */}
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <button onClick={() => navigate(-1)} style={{ background: '#121212', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }} title="Go back">
-                    <ChevronLeft size={20} />
+                <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Menu">
+                    <Menu size={24} />
                 </button>
-                <button onClick={() => navigate(1)} style={{ background: '#121212', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#a7a7a7' }} title="Go forward">
-                    <ChevronRight size={20} />
-                </button>
+                <div className="hide-on-mobile" style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => navigate(-1)} style={{ background: '#121212', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }} title="Go back">
+                        <ChevronLeft size={20} />
+                    </button>
+                    <button onClick={() => navigate(1)} style={{ background: '#121212', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#a7a7a7' }} title="Go forward">
+                        <ChevronRight size={20} />
+                    </button>
+                </div>
             </div>
 
             {/* Center Search / Home */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, maxWidth: '540px', margin: '0 2rem' }}>
-                <Link to="/" style={{ background: '#1a1a1a', border: 'none', borderRadius: '50%', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', textDecoration: 'none', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+                <Link to="/" className="hide-on-mobile" style={{ background: '#1a1a1a', border: 'none', borderRadius: '50%', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', textDecoration: 'none', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
                     <Home size={24} />
                 </Link>
                 <div style={{ display: 'flex', alignItems: 'center', background: '#242424', borderRadius: '50px', padding: '0.75rem 1.25rem', flex: 1, border: '1px solid transparent', transition: 'background-color 0.3s, border-color 0.3s', cursor: 'text' }} onClick={() => { if (location.pathname !== '/search') navigate('/search'); }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'} onMouseLeave={e => e.currentTarget.style.backgroundColor = '#242424'}>
@@ -82,19 +87,19 @@ function Navbar() {
             {/* Right Icons */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {user?.role === 'artist' && (
-                    <>
+                    <div className="hide-on-mobile" style={{ display: 'flex', gap: '1rem' }}>
                         <Link to="/upload-music" title="Upload Music" style={{ color: '#a7a7a7', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#a7a7a7'}>
                             <UploadCloud size={20} />
                         </Link>
                         <Link to="/create-album" title="Create Album" style={{ color: '#a7a7a7', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#a7a7a7'}>
                             <FolderPlus size={20} />
                         </Link>
-                    </>
+                    </div>
                 )}
-                <button title="Notifications" style={{ background: 'transparent', border: 'none', color: '#a7a7a7', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#a7a7a7'}>
+                <button className="hide-on-mobile" title="Notifications" style={{ background: 'transparent', border: 'none', color: '#a7a7a7', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#a7a7a7'}>
                     <Bell size={20} />
                 </button>
-                <button title="Friend Activity" style={{ background: 'transparent', border: 'none', color: '#a7a7a7', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#a7a7a7'}>
+                <button className="hide-on-mobile" title="Friend Activity" style={{ background: 'transparent', border: 'none', color: '#a7a7a7', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#fff'} onMouseLeave={e => e.currentTarget.style.color = '#a7a7a7'}>
                     <Users size={20} />
                 </button>
 

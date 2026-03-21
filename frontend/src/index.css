@@ -683,3 +683,126 @@ a:hover {
   transform: translateY(0) !important;
 }
 
+.mobile-menu-btn {
+  display: none !important;
+}
+
+/* ════════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN (Laptop & Mobile)
+═══════════════════════════════════════════════════════════════ */
+
+/* Laptops & Tablets (< 1024px) */
+@media screen and (max-width: 1024px) {
+  .quick-links-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Small Tablets & Large Phones (< 768px) */
+@media screen and (max-width: 768px) {
+  .app-container.logged-in {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 260px;
+    height: 100vh;
+    z-index: 9999;
+    transition: left 0.3s ease-in-out;
+  }
+
+  .sidebar.mobile-open {
+    left: 0;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.8);
+  }
+
+  /* Overlay for when sidebar is open */
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9998;
+    display: none;
+    backdrop-filter: blur(2px);
+  }
+
+  .sidebar.mobile-open + .mobile-overlay {
+    display: block;
+  }
+
+  .navbar {
+    padding: 0.5rem 1rem !important;
+    gap: 0.5rem;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .navbar input {
+    font-size: 0.85rem !important;
+  }
+
+  .content-wrapper {
+    padding: 1rem !important;
+  }
+
+  .content-wrapper h1 {
+    font-size: 2rem !important;
+  }
+
+  /* Adjust Music Player for Mobile */
+  .music-player {
+    height: auto;
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .player-track-info {
+    width: calc(100% - 100px);
+    margin-bottom: 0.5rem;
+  }
+
+  .player-centre {
+    width: 100%;
+    order: 3;
+    padding-bottom: 0.5rem;
+  }
+
+  .player-volume {
+    position: absolute;
+    top: 0.75rem;
+    right: 1rem;
+    width: auto;
+  }
+  
+  .player-volume input {
+    display: none; /* simple volume on mobile */
+  }
+
+  /* Fix grids for phones */
+  .quick-links-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Extra Small Phones (< 480px) */
+@media screen and (max-width: 480px) {
+  .player-buttons {
+    gap: 0.75rem;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
+

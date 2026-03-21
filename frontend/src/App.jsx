@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { AuthContext } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import MusicPlayer from './components/MusicPlayer';
@@ -27,12 +27,13 @@ const ProtectedRoute = ({ children, requireArtist }) => {
 
 function App() {
   const { user } = useContext(AuthContext);
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className={`app-container ${user ? 'logged-in' : ''}`}>
-      {user && <Sidebar />}
+      {user && <Sidebar isMobileMenuOpen={isMobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />}
       <div className="main-content">
-        {user && <Navbar />}
+        {user && <Navbar setMobileMenuOpen={setMobileMenuOpen} />}
         <Routes>
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
           <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />
